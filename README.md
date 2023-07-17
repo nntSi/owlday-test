@@ -37,3 +37,33 @@
 มีความคล้ายกับ Middleware แต่จะใช้กับ Logic ที่เฉพาะเจาะจง หรือการกำหนด Permission ในการเข้าถึงฟังก์ชั่นก่อนที่จะเข้าถึงฟังก์ชั่นนั้น
 ```
 ##### สร้าง Guard
+```typescript
+import {
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { TokenExtract } from '../dto/token.dto';
+
+@Injectable()
+export class PermissionsGuard implements CanActivate {
+  constructor(private reflector: Reflector) {}
+  canActivate(context: ExecutionContext): boolean {
+    const req = context.switchToHttp().getRequest();
+    const tokenExtract: TokenExtract = req.user;
+    const requiredPermission: string = this.reflector.get(
+      'permissions',
+      context.getHandler(),
+    );
+    const checkPermission: boolean =
+      tokenExtract.permissions.includes(requiredPermission);
+    if (!checkPermission) {
+      throw new ForbiddenException('Insufficient Permission');
+    }
+    return true;
+  }
+}
+
+```
