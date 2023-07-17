@@ -36,7 +36,18 @@
 ```bash
 มีความคล้ายกับ Middleware แต่จะใช้กับ Logic ที่เฉพาะเจาะจง หรือการกำหนด Permission ในการเข้าถึงฟังก์ชั่นก่อนที่จะเข้าถึงฟังก์ชั่นนั้น
 ```
-##### สร้าง Guard
+##### ข้อมูลใน tokenExtract (1)
+```typescript
+tokenExtract = {
+  email: 'wachirawit.ntsi@gmail.com',
+  userId: 4,
+  permissions: [ 'read_user', 'new_stock', 'edit_stock', 'add_stock' ],
+  iat: 1689602129,
+  exp: 1689605729
+}
+```
+
+##### สร้าง PermissionsGuard
 ```typescript
 import {
   CanActivate,
@@ -51,12 +62,18 @@ import { TokenExtract } from '../dto/token.dto';
 export class PermissionsGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
   canActivate(context: ExecutionContext): boolean {
+
+    // ทำการเอาข้อมูล Permissions ที่ได้จากการนำ Token ไป Decrypt จาก Middleware (1)
     const req = context.switchToHttp().getRequest();
     const tokenExtract: TokenExtract = req.user;
+
+    // รับค่าจาก reflector ที่ได้จาก SetMetadata ในกรณีนี้ผมรับเป็น String เดี่ยวๆ
     const requiredPermission: string = this.reflector.get(
       'permissions',
       context.getHandler(),
     );
+    
+    // เช็คว่าค่า Permission ที่ต้องการมีอยู่ใน tokenExtract ของเราหรือไม่
     const checkPermission: boolean =
       tokenExtract.permissions.includes(requiredPermission);
     if (!checkPermission) {
@@ -65,5 +82,32 @@ export class PermissionsGuard implements CanActivate {
     return true;
   }
 }
+```
+##### นำมาใช้งาน
+```typescript
+import {
+  Controller,
+  Get,
+  Param,
+  UseGuards,
+  SetMetadata,
+} from '@nestjs/common';
+import { UserService } from './user.service';
+import { PermissionsGuard } from 'src/authorization/permissions/permissions.guard';
+import { AuthGuard } from 'src/authentication/authentication.guard';
 
+@Controller('user')
+export class UserController {
+  constructor(private readonly userService: UserService) {}
+
+  @UseGuards(AuthGuard, PermissionsGuard)
+  @SetMetadata('permissions', 'read_user')
+  @Get(':id')
+  async getUser(@Param('id') id: string) {
+    const { password, ...data_nopassword } = await this.userService.user({
+      id: parseInt(id),
+    });
+    return data_nopassword;
+  }
+}
 ```
