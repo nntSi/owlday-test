@@ -23,10 +23,10 @@
     1.3.2 ถาม Chat GPT และลองถามตามเบื้องต้นดู
 
 2.อธิบายความแตกต่างระหว่าง Middleware และ Interceptor ใน NestJS และให้ยกตัวอย่างการใช้งานของแต่ละอัน
-
   - Middleware เป็นฟังก์ชั่นที่ใช้กับตัวจัดการเส้นทาง ซึ่งจะทำงานก่อนที่จะเรียกใช้ตัวจัดการเส้นทาง โดยปกติจะใช้กับพวก Authentication ตรวจสอบ Token จาก Client ก่อนการขอข้อมูล หรือก่อนเข้าถึงการใช้งานฟังก์ชั่นอื่นๆ ใน Application
+  Client Side -> Middleware -> @RequestMapping
 
   - Interceptors มีความคล้ายกับ Middleware แต่จะทำงานได้ทั้งตอน ก่อนการเข้าถึงฟังก์ชั่นและหลังจากเสร็จสิ้นการทำงานของฟังก์ชั่น สามารถใช้กับการ Log ค่า Request ต่างๆ หรือปรับแต่งข้อมูลให้พร้อม ก่อนที่จะเข้าถึงฟังก์ชั่น หรือปรับแต่งข้อมูลก่อนส่งให้กลับ Client
 
-  Client Side -> Middleware -> @RequestMapping -> Interceptors <-> @Get, @Post, @Patch, @Delete
+  Client Side <-> Interceptors <-> @Get, @Post, @Patch, @Delete
 ```
