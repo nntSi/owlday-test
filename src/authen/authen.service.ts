@@ -3,10 +3,16 @@ import { Prisma } from '@prisma/client';
 import { genSaltSync, hashSync, compareSync } from 'bcryptjs';
 import { UserService } from 'src/user/user.service';
 import { SignInDto } from './dto/authen.dto';
+import { JwtService } from '@nestjs/jwt';
+
+const PRIVATE_KEY = process.env.PRIVATE_KEY;
 
 @Injectable()
 export class AuthenService {
-  constructor(private userService: UserService) {}
+  constructor(
+    private userService: UserService,
+    private jwtService: JwtService,
+  ) {}
 
   async register(userCreateInput: Prisma.UserCreateInput) {
     const { password } = userCreateInput;
@@ -23,15 +29,6 @@ export class AuthenService {
     const { email, password } = data;
     const user = await this.userService.findOne({
       where: { email },
-      include: {
-        role: {
-          include: {
-            rolePermission: {
-              include: { permission: true },
-            },
-          },
-        },
-      },
     });
     if (!user) {
       throw new BadRequestException('This email not found!!');
@@ -41,6 +38,10 @@ export class AuthenService {
     if (!match) {
       throw new BadRequestException('This password is not match!!');
     }
-    return usr;
+    return {
+      access_token: await this.jwtService.signAsync(usr, {
+        privateKey: PRIVATE_KEY,
+      }),
+    };
   }
 }
