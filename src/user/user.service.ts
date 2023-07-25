@@ -33,12 +33,15 @@ export class UserService {
   ): Promise<User> {
     return this.prismaService.user.update({
       where: { id },
-      data: userUpdateInput,
+      data: { ...userUpdateInput, password: undefined },
     });
   }
 
-  async delete(id: number): Promise<User> {
-    return this.prismaService.user.delete({ where: { id } });
+  async delete(id: number) {
+    return this.prismaService.user.delete({
+      where: { id },
+      select: { email: true, fname: true, id: true, lname: true, role: true },
+    });
   }
 
   async addProduct(productCreateInput: Prisma.ProductCreateInput) {
@@ -52,16 +55,12 @@ export class UserService {
     return this.productService.update({ id: productId }, productUpdateInput);
   }
 
-  async findOneProduct(userId: number, productId: number) {
-    return this.productService.findOne({ where: { userId, id: productId } });
+  async findOneProduct(productId: number) {
+    return this.productService.findOne({ where: { id: productId } });
   }
 
-  async findAllProduct(userId: number, skip: number, take: number) {
-    return this.productService.findAll({
-      where: { userId },
-      skip: skip ? skip : undefined,
-      take: take ? take : undefined,
-    });
+  async findAllProduct(productFindManyArg: Prisma.ProductFindManyArgs) {
+    return this.productService.findAll(productFindManyArg);
   }
 
   async deleteProduct(userId: number, productId: number) {

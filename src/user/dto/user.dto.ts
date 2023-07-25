@@ -3,4 +3,11 @@ export class filterUserDto {
   lname: string;
   email: string;
   roleId: string;
+  skip: string;
+  take: string;
+}
+
+export class QueryProductDto {
+  skip: string;
+  take: string;
 }

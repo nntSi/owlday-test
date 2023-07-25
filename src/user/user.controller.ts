@@ -1,16 +1,18 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
   Post,
   Query,
+  Req,
   SetMetadata,
   UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { filterUserDto } from './dto/user.dto';
+import { QueryProductDto, filterUserDto } from './dto/user.dto';
 import { AuthenGuard } from 'src/authen/authen.guard';
 import {
   PermissionsGuard,
@@ -34,10 +36,31 @@ export class UserController {
   }
 
   @UseGuards(PermissionsGuard)
+  @SetMetadata('permission', 'update_user')
+  @Patch(':id')
+  async updateUser(
+    @Param('id') id: string,
+    @Body() userUpdateInput: Prisma.UserUpdateInput,
+  ) {
+    const { password, ...data } = await this.userService.update(
+      parseInt(id),
+      userUpdateInput,
+    );
+    return data;
+  }
+
+  @UseGuards(PermissionsGuard)
+  @SetMetadata('permission', 'delete_user')
+  @Delete(':id')
+  async deleteUser(@Param('id') id: string) {
+    return this.userService.delete(parseInt(id));
+  }
+
+  @UseGuards(PermissionsGuard)
   @SetMetadata('permission', 'read_user')
   @Get()
   async findAllUser(@Query() query: filterUserDto) {
-    const { email, fname, lname, roleId } = query;
+    const { email, fname, lname, roleId, skip, take } = query;
     const data = await this.userService.findAll({
       select: {
         id: true,
@@ -45,7 +68,6 @@ export class UserController {
         fname: true,
         lname: true,
         password: false,
-        products: true,
         role: true,
         roleId: true,
       },
@@ -55,6 +77,8 @@ export class UserController {
         lname: lname ? lname : undefined,
         roleId: roleId ? parseInt(roleId) : undefined,
       },
+      skip: skip ? parseInt(skip) : undefined,
+      take: take ? parseInt(take) : undefined,
     });
     return data;
   }
@@ -63,7 +87,7 @@ export class UserController {
   @SetMetadata('permission', 'add_product')
   @Post('add/product')
   async addProduct(@Body() productCreateInput: Prisma.ProductCreateInput) {
-    this.userService.addProduct(productCreateInput);
+    return this.userService.addProduct(productCreateInput);
   }
 
   @UseGuards(PermissionsGuard, ProductGuard)
@@ -77,5 +101,26 @@ export class UserController {
       parseInt(productId),
       productUpdateInput,
     );
+  }
+
+  @UseGuards(PermissionsGuard, ProductGuard)
+  @SetMetadata('permission', 'read_product')
+  @Get('/find/product/:productId')
+  async findOneProduct(@Param('productId') productId: string) {
+    return this.userService.findOneProduct(parseInt(productId));
+  }
+
+  @UseGuards(PermissionsGuard)
+  @SetMetadata('permission', 'read_product')
+  @Get('/find/product')
+  async findAllProduct(@Req() req: any, @Query() query: QueryProductDto) {
+    const { skip, take } = query;
+    return this.userService.findAllProduct({
+      where: {
+        userId: req.userId,
+      },
+      skip: skip ? parseInt(skip) : undefined,
+      take: take ? parseInt(take) : undefined,
+    });
   }
 }
