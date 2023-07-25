@@ -111,3 +111,19 @@ export class UserController {
   }
 }
 ```
+
+#### 4. เขียน sql file จาก requirement ที่กำหนดให้ต่อไปนี้
+ไฟล์ [exam-4.sql](exam-4.sql)
+
+#### 5. สร้างโปรเจค NestJS เพื่อนำไปพัฒนาระบบดังต่อไปนี้
+##### ติดตั้งโปรเจ็ค
+```bash
+npm install
+```
+##### ใช้งาน Development
+```bash
+npm run start:dev
+```
+
+## Api Document
+[Postman Link](https://documenter.getpostman.com/view/23612663/2s946o3oas)
